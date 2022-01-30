@@ -127,3 +127,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Configs
+/Config/*
+
+# Preserve necessary folders
+!.gitkeep
