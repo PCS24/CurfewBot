@@ -4,6 +4,7 @@ yaml = YAML()
 from typing import Sequence, List, Iterable, Set, Union
 import discord
 from discord.ext import commands
+import copy
 
 def getRootPath() -> Union[os.PathLike, str]:
     """
