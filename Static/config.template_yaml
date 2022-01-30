@@ -1,6 +1,6 @@
 Metadata:
   # DO NOT EDIT
-  VERSION: 0.001
+  VERSION: 0.002
 
 Logging:
   # Should be 'DEBUG', 'INFO', 'WARNING', 'ERROR', or 'CRITICAL'
@@ -23,7 +23,7 @@ Bot:
   token: env
 
   # The prefix can be changed in external servers.
-  default_prefix: '>'
+  default_prefix: ']'
 
   # Should be 'true' or 'false'. Will disable some commands for non-operators.
   dev_mode: false
