@@ -1,0 +1,43 @@
+Metadata:
+  # DO NOT EDIT
+  VERSION: 0.001
+
+Logging:
+  # Should be 'DEBUG', 'INFO', 'WARNING', 'ERROR', or 'CRITICAL'
+  logging_level: INFO
+
+  # Use datetime format codes
+  date_format: '%Y-%m-%d %H:%M:%S'
+
+  # Should be 'true' or 'false'
+  # Whether or not to save logs as .log files in the Logs folder
+  log_files: true
+
+  # Whether or not to print logs to stdout
+  log_stdout: true
+
+Bot:
+  # Your token can be found on the Discord Developers page.
+  # Set to 'env' to load from a .env file (the variable must be named DISCORD_TOKEN)
+  # .env file must be in the root directory (with main.py)
+  token: env
+
+  # The prefix can be changed in external servers.
+  default_prefix: '>'
+
+  # Should be 'true' or 'false'. Will disable some commands for non-operators.
+  dev_mode: false
+
+  # Whether to enable jishaku on launch
+  jishaku: true
+
+  # Emojis for use in various places, such as error messages
+  placeholders:
+    error: ":no_entry:"
+    info: ":information_source:"
+    warning: ":warning:"
+    wait: ":stopwatch:"
+    success: ":white_check_mark:"
+    stop: ":stop_button:"
+    restart: ":repeat:"
+    skip: ":fast_forward:"
