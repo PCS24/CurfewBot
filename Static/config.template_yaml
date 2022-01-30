@@ -1,6 +1,6 @@
 Metadata:
   # DO NOT EDIT
-  VERSION: 0.002
+  VERSION: 0.003
 
 Logging:
   # Should be 'DEBUG', 'INFO', 'WARNING', 'ERROR', or 'CRITICAL'
@@ -27,6 +27,11 @@ Bot:
 
   # Should be 'true' or 'false'. Will disable some commands for non-operators.
   dev_mode: false
+
+  # List of guild IDs to pass to commands.Bot.debug_guilds.
+  # Commands will be pushed to these guilds instantly instead of being registered as global commands (up to 1h wait time).
+  # These will only be used if dev_mode is on.
+  debug_guild_ids: []
 
   # Whether to enable jishaku on launch
   jishaku: true

@@ -52,7 +52,7 @@ for p in CONFIG['Bot']['placeholders']:
     CONFIG['Bot']['placeholders'][p] = discord_emoji.to_unicode(CONFIG['Bot']['placeholders'][p])
 
 # Create bot instance
-bot = utils.CurfewBot(CONFIG, command_prefix=utils.getPrefix, intents=discord.Intents.all(), case_insensitive=True)
+bot = utils.CurfewBot(CONFIG, command_prefix=utils.getPrefix, intents=discord.Intents.all(), case_insensitive=True, debug_guilds=(CONFIG['Bot']['debug_guild_ids'] if CONFIG['Bot']['dev_mode'] else None))
 #bot.remove_command('help') # Remove default help command
 
 # Load cogs
