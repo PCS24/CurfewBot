@@ -76,6 +76,14 @@ async def ping(ctx: ApplicationContext):
     """
     await ctx.respond('Pong! `{0}`s'.format(round(bot.latency, 2)))
 
+STATE_MAP = {
+    True: 1,
+    None: 0,
+    False: -1
+}
+
+STATE_MAP_REVERSE = {y: x for x, y in STATE_MAP.items()}
+
 async def server_lockdown(guild: discord.Guild, target_roles: List[discord.Role], whitelisted_channel_ids: List[int]) -> dict:
     # Given the target server and the roles provided from the owner's config, lock down the server.
     # Input validation will be handled by the commands. Do not worry about it here, for the most part.
@@ -87,12 +95,6 @@ async def server_lockdown(guild: discord.Guild, target_roles: List[discord.Role]
     } # Since the default role has an ID, it will be included in the reports without special accommodation
 
     # Iterate over each unwhitelisted channel in the server:
-
-    STATE_MAP = {
-        True: 1,
-        None: 0,
-        False: -1
-    }
 
     channels = [x for x in guild.channels if x.id not in whitelisted_channel_ids]
     for ch in channels:
