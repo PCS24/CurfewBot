@@ -122,14 +122,12 @@ async def server_lockdown(guild: discord.Guild, target_roles: List[discord.Role]
             if (r in target_roles or r == guild.default_role) and (new_overwrites[r].view_channel != False):
                 previous_state = STATE_MAP[new_overwrites[r].view_channel]
                 new_overwrites[r].view_channel = False
-                print(1, new_overwrites[r].view_channel)
 
                 # Record all affected roles in the report dict
                 report['affected_channels'][str(ch.id)].append([r.id, previous_state])
 
         if len(report['affected_channels'][str(ch.id)]) > 0:
             # Update channel permissions with new overwrites
-            print(new_overwrites[guild.default_role].view_channel)
             await ch.edit(overwrites=new_overwrites)
 
             # Delay to prevent ratelimiting
