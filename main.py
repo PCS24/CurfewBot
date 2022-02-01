@@ -10,6 +10,7 @@ import discord_emoji
 from dotenv import load_dotenv
 import datetime
 import sys
+from typing import List, Set
 
 load_dotenv()
 
@@ -99,44 +100,52 @@ async def server_lockdown(guild: discord.Guild, target_roles: List[discord.Role]
     channels = [x for x in guild.channels if x.id not in whitelisted_channel_ids]
     for ch in channels:
         
-        ch_updated = False
         previous_state = None
 
-        # If no overwrites exist in the channel, create one for the default role
-        if len(ch.overwrites.keys()) < 1:
-            await ch.set_permissions(guild.default_role, view_channel=False)
-            ch_updated = True
-            previous_state = STATE_MAP[None]
+        if ch.id not in report['affected_channels'].keys():
+            report['affected_channels'][str(ch.id)] = []
 
-        else:
-            # Else, iterate over each role in the channel's overwrites:
-            for r in ch.overwrites.keys():
-                # Skip user-specific overwrites
-                if not isinstance(r, discord.Role):
-                    continue
+        new_overwrites = ch.overwrites.copy()
 
-                # If the role is the guild's default role or it is in target_roles, set "View Channel" to False if not already disabled
-                if (r in target_roles or r == guild.default_role) and (ch.overwrites[r].view_channel != False):
-                    previous_state = STATE_MAP[ch.overwrites[r].view_channel]
-                    await ch.set_permissions(r, view_channel=False)
-                    ch_updated = True
+        # If no overwrite present for the default role, create one
+        if guild.default_role not in new_overwrites.keys():
+            new_overwrites[guild.default_role] = discord.PermissionOverwrite(view_channel=False)
+            report['affected_channels'][str(ch.id)].append([guild.default_role.id, STATE_MAP[None]])
 
-        if ch_updated:
-            # Record all affected roles in the report dict
-            if ch.id not in report['affected_channels'].keys():
-                report['affected_channels'][str(ch.id)] = []
-            report['affected_channels'][str(ch.id)].append([r.id, previous_state])
+        # Iterate over each role in the channel's overwrites:
+        for r in new_overwrites.keys():
+            # Skip user-specific overwrites
+            if not isinstance(r, discord.Role):
+                continue
+
+            # If the role is the guild's default role or it is in target_roles, set "View Channel" to False if not already disabled
+            if (r in target_roles or r == guild.default_role) and (new_overwrites[r].view_channel != False):
+                previous_state = STATE_MAP[new_overwrites[r].view_channel]
+                new_overwrites[r].view_channel = False
+                print(1, new_overwrites[r].view_channel)
+
+                # Record all affected roles in the report dict
+                report['affected_channels'][str(ch.id)].append([r.id, previous_state])
+
+        if len(report['affected_channels'][str(ch.id)]) > 0:
+            # Update channel permissions with new overwrites
+            print(new_overwrites[guild.default_role].view_channel)
+            await ch.edit(overwrites=new_overwrites)
 
             # Delay to prevent ratelimiting
             await asyncio.sleep(len(channels) / 50)
+        
+        else:
+            report['affected_channels'].pop(str(ch.id))
 
     # Iterate over the given roles + the server default role:
     roles = target_roles + [guild.default_role]
     for r in roles:
         # Set "View Channels" to False if not already disabled
         if r.permissions.view_channel != False:
-            r.permissions.update(view_channel=False)
-            await r.edit(permissions=r.permissions)
+            new_permissions = r.permissions
+            new_permissions.update(view_channel=False)
+            await r.edit(permissions=new_permissions)
 
             # Record all affected roles in the report dict
             report['affected_roles'].append(r.id)
