@@ -76,6 +76,74 @@ async def ping(ctx: ApplicationContext):
     """
     await ctx.respond('Pong! `{0}`s'.format(round(bot.latency, 2)))
 
+async def server_lockdown(guild: discord.Guild, target_roles: List[discord.Role], whitelisted_channel_ids: List[int]) -> dict:
+    # Given the target server and the roles provided from the owner's config, lock down the server.
+    # Input validation will be handled by the commands. Do not worry about it here, for the most part.
+    
+    # Create report dict
+    report = {
+        'affected_channels': {}, # Each channel's ID will become a key (as a string) in this nested dict and the value will be a list of lists of the IDs of all affected roles and their previous permission states
+        'affected_roles': [] # List of IDs of affected roles from target_roles plus the default role
+    } # Since the default role has an ID, it will be included in the reports without special accommodation
+
+    # Iterate over each unwhitelisted channel in the server:
+
+    STATE_MAP = {
+        True: 1,
+        None: 0,
+        False: -1
+    }
+
+    channels = [x for x in guild.channels if x.id not in whitelisted_channel_ids]
+    for ch in channels:
+        
+        ch_updated = False
+        previous_state = None
+
+        # If no overwrites exist in the channel, create one for the default role
+        if len(ch.overwrites.keys()) < 1:
+            await ch.set_permissions(guild.default_role, view_channel=False)
+            ch_updated = True
+            previous_state = STATE_MAP[None]
+
+        else:
+            # Else, iterate over each role in the channel's overwrites:
+            for r in ch.overwrites.keys():
+                # Skip user-specific overwrites
+                if not isinstance(r, discord.Role):
+                    continue
+
+                # If the role is the guild's default role or it is in target_roles, set "View Channel" to False if not already disabled
+                if (r in target_roles or r == guild.default_role) and (ch.overwrites[r].view_channel != False):
+                    previous_state = STATE_MAP[ch.overwrites[r].view_channel]
+                    await ch.set_permissions(r, view_channel=False)
+                    ch_updated = True
+
+        if ch_updated:
+            # Record all affected roles in the report dict
+            if ch.id not in report['affected_channels'].keys():
+                report['affected_channels'][str(ch.id)] = []
+            report['affected_channels'][str(ch.id)].append([r.id, previous_state])
+
+            # Delay to prevent ratelimiting
+            await asyncio.sleep(len(channels) / 50)
+
+    # Iterate over the given roles + the server default role:
+    roles = target_roles + [guild.default_role]
+    for r in roles:
+        # Set "View Channels" to False if not already disabled
+        if r.permissions.view_channel != False:
+            r.permissions.update(view_channel=False)
+            await r.edit(permissions=r.permissions)
+
+            # Record all affected roles in the report dict
+            report['affected_roles'].append(r.id)
+
+            # Delay to prevent ratelimiting
+            await asyncio.sleep(len(roles) / 50)
+
+    # Return report dict
+    return report
 @bot.event
 async def on_command_error(ctx: commands.Context, error: commands.CommandError):
     error = getattr(error, "original", error)
