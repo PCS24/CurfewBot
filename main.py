@@ -68,18 +68,18 @@ for cog in COGS:
     else:
         logging.info("Loaded cog '" + cog + "'")
 
-@bot.event
-async def on_command_error(ctx: commands.Context, error: commands.CommandError):
-    error = getattr(error, "original", error)
-    if ctx.command != None:
-        logging.exception(f"'{type(error)}' exception occurred while executing command \'{ctx.command.name}\': {error}")
-
 @bot.slash_command()
 async def ping(ctx):
     """
     Returns the bot's API latency
     """
     await ctx.respond('Pong! `{0}`s'.format(round(bot.latency, 2)))
+
+@bot.event
+async def on_command_error(ctx: commands.Context, error: commands.CommandError):
+    error = getattr(error, "original", error)
+    if ctx.command != None:
+        logging.exception(f"'{type(error)}' exception occurred while executing command \'{ctx.command.name}\': {error}")
 
 @bot.event
 async def on_ready():
