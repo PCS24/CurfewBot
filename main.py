@@ -1,6 +1,7 @@
 import traceback
 import discord
 from discord.ext import commands
+from discord.commands.context import ApplicationContext
 import asyncio
 import logging
 import os
@@ -69,7 +70,7 @@ for cog in COGS:
         logging.info("Loaded cog '" + cog + "'")
 
 @bot.slash_command()
-async def ping(ctx):
+async def ping(ctx: ApplicationContext):
     """
     Returns the bot's API latency
     """
