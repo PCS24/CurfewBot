@@ -153,6 +153,84 @@ async def server_lockdown(guild: discord.Guild, target_roles: List[discord.Role]
 
     # Return report dict
     return report
+
+async def server_reopen(guild: discord.Guild, lockdown_report: dict) -> dict:
+    # Create report dict
+    report = {
+        "missing_channels": [],
+        "missing_roles": [],
+        "missing_overwrites": {} # Keys, stringified channel IDs. Values, lists of role IDs.
+    }
+
+    # Iterate over each affected channel in lockdown_report:
+    for k in lockdown_report['affected_channels'].keys():
+        # Get the channel from the channel ID
+        channel = guild.get_channel(int(k))
+        # If channel not found, store the problem in the report and continue to next iteration
+        if channel == None:
+            report['missing_channels'].append(int(k))
+            continue
+        
+        new_overwrites = channel.overwrites.copy()
+        # Iterate over each list in the list for the channel:
+        for ov in lockdown_report['affected_channels'][k]:
+            # Get the role ID from the first element and try to get the role
+            role = guild.get_role(ov[0])
+            # If role not found, store the problem in the report and continue to next iteration
+            if role == None:
+                report['missing_roles'].append(ov[0])
+                continue
+            # If role is no longer in the overwrites for the channel, store the problem in the report and continue to next iteration
+            if role not in new_overwrites.keys():
+                if k not in report['missing_overwrites'].keys():
+                    report['missing_overwrites'][k] = []
+                if ov[0] not in report['missing_overwrites'][k]:
+                    report['missing_overwrites'][k].append(ov[0])
+                continue
+
+            # Edit the overwrite for the role in that channel to match the original permission state specified in lockdown_report
+            previous_state = new_overwrites[role].view_channel
+            new_overwrites[role].view_channel = STATE_MAP_REVERSE[ov[1]]
+            
+            # Take note of the change in the report and include the original state from before reopening
+            #TODO
+        
+        # Update channel
+        await channel.edit(overwrites=new_overwrites)
+
+        # Delay to prevent ratelimiting
+        await asyncio.sleep(len(lockdown_report['affected_channels']) / 50)
+        
+        # If the channel was affected, take note of the change in the report
+        #TODO
+
+    # Iterate over each affected role in lockdown_report:
+    for r_id in lockdown_report['affected_roles']:
+        # Get the role from the role ID
+        role = guild.get_role(r_id)
+        # If role not found, store the problem in the report and continue to next iteration
+        if role == None:
+            report['missing_roles'].append(r_id)
+            continue
+
+        # Edit the role so that "View channels" permission is enabled (lockdown_report would only have it stored if it was previously enabled)
+        new_permissions = role.permissions
+        new_permissions.update(view_channel=True)
+        await role.edit(permissions=new_permissions)
+        
+        # Take note of the change in the report
+        #TODO
+
+        # Delay to prevent ratelimiting
+        await asyncio.sleep(len(lockdown_report['affected_roles']) / 50)
+
+    # Finalize report
+    report['missing_channels'] = list(set(report['missing_channels']))
+    report['missing_roles'] = list(set(report['missing_roles']))
+
+    # Return report dict
+    return report
+
 @bot.event
 async def on_command_error(ctx: commands.Context, error: commands.CommandError):
     error = getattr(error, "original", error)
