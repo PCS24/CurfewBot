@@ -92,7 +92,9 @@ async def server_lockdown(guild: discord.Guild, target_roles: List[discord.Role]
     # Create report dict
     report = {
         'affected_channels': {}, # Each channel's ID will become a key (as a string) in this nested dict and the value will be a list of lists of the IDs of all affected roles and their previous permission states
-        'affected_roles': [] # List of IDs of affected roles from target_roles plus the default role
+        'affected_roles': [], # List of IDs of affected roles from target_roles plus the default role
+        'no_perms_channels': [], # List of IDs of channels the bot has no permission to edit
+        'no_perms_roles': [] # List of IDs of roles the bot has no permission to edit
     } # Since the default role has an ID, it will be included in the reports without special accommodation
 
     # Iterate over each unwhitelisted channel in the server:
@@ -128,7 +130,12 @@ async def server_lockdown(guild: discord.Guild, target_roles: List[discord.Role]
 
         if len(report['affected_channels'][str(ch.id)]) > 0:
             # Update channel permissions with new overwrites
-            await ch.edit(overwrites=new_overwrites)
+            try:
+                await ch.edit(overwrites=new_overwrites)
+            except discord.errors.Forbidden:
+                # Record error in report, continue to next iteration
+                report['no_perms_channels'].append(ch.id)
+                continue
 
             # Delay to prevent ratelimiting
             await asyncio.sleep(len(channels) / 50)
@@ -143,7 +150,12 @@ async def server_lockdown(guild: discord.Guild, target_roles: List[discord.Role]
         if r.permissions.view_channel != False:
             new_permissions = r.permissions
             new_permissions.update(view_channel=False)
-            await r.edit(permissions=new_permissions)
+            try:
+                await r.edit(permissions=new_permissions)
+            except discord.errors.Forbidden:
+                # Record error in report, continue to next iteration
+                report['no_perms_roles'].append(r.id)
+                continue
 
             # Record all affected roles in the report dict
             report['affected_roles'].append(r.id)
@@ -159,7 +171,9 @@ async def server_reopen(guild: discord.Guild, lockdown_report: dict) -> dict:
     report = {
         "missing_channels": [],
         "missing_roles": [],
-        "missing_overwrites": {} # Keys, stringified channel IDs. Values, lists of role IDs.
+        "missing_overwrites": {}, # Keys, stringified channel IDs. Values, lists of role IDs.
+        "no_perms_roles": [],
+        "no_perms_channels": []
     }
 
     # Iterate over each affected channel in lockdown_report:
@@ -196,7 +210,12 @@ async def server_reopen(guild: discord.Guild, lockdown_report: dict) -> dict:
             #TODO
         
         # Update channel
-        await channel.edit(overwrites=new_overwrites)
+        try:
+            await channel.edit(overwrites=new_overwrites)
+        except discord.errors.Forbidden:
+            # Record error in report, continue to next iteration
+            report['no_perms_channels'].append(channel.id)
+            continue
 
         # Delay to prevent ratelimiting
         await asyncio.sleep(len(lockdown_report['affected_channels']) / 50)
@@ -216,8 +235,12 @@ async def server_reopen(guild: discord.Guild, lockdown_report: dict) -> dict:
         # Edit the role so that "View channels" permission is enabled (lockdown_report would only have it stored if it was previously enabled)
         new_permissions = role.permissions
         new_permissions.update(view_channel=True)
-        await role.edit(permissions=new_permissions)
-        
+        try:
+            await role.edit(permissions=new_permissions)
+        except discord.errors.Forbidden:
+            # Record error in report, continue to next iteration
+            report['no_perms_roles'].append(role.id)
+            continue
         # Take note of the change in the report
         #TODO
 
