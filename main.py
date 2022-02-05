@@ -3,6 +3,7 @@ import discord
 from discord.ext import commands
 from discord.commands.context import ApplicationContext
 import asyncio
+import aiosqlite
 import logging
 import os
 import utils
@@ -85,7 +86,19 @@ STATE_MAP = {
 
 STATE_MAP_REVERSE = {y: x for x, y in STATE_MAP.items()}
 
-async def server_lockdown(guild: discord.Guild, target_roles: List[discord.Role], whitelisted_channel_ids: List[int]) -> dict:
+async def update_guild_timestamp(guild: discord.Guild, column: str, db: aiosqlite.Connection = None):
+    my_db = db == None
+    if my_db:
+        db = await bot.connect_db()
+    try:
+        # User-entered input should not be able to reach here in any form
+        await db.execute(f"UPDATE STATE_INFO SET \"{column}\"=? WHERE GUILD_ID=?", (datetime.datetime.now().timestamp(), guild.id))
+        await db.commit()
+    finally:
+        if my_db:
+            await db.close()
+
+async def server_lockdown(guild: discord.Guild, target_roles: List[discord.Role], whitelisted_channel_ids: List[int], db: aiosqlite.Connection = None) -> dict:
     # Given the target server and the roles provided from the owner's config, lock down the server.
     # Input validation will be handled by the commands. Do not worry about it here, for the most part.
     
@@ -165,9 +178,20 @@ async def server_lockdown(guild: discord.Guild, target_roles: List[discord.Role]
     
     finally:
         # Return report dict
-        return report
+        try:
+            return report
+        finally:
+            # Update database
+            my_db = db == None
+            if my_db:
+                db = await bot.connect_db()
+            try:
+                await update_guild_timestamp(guild, 'LAST_LOCKDOWN', db=db)
+            finally:
+                if my_db:
+                    await db.close()
 
-async def server_reopen(guild: discord.Guild, lockdown_report: dict) -> dict:
+async def server_reopen(guild: discord.Guild, lockdown_report: dict, db: aiosqlite.Connection = None) -> dict:
     # Create report dict
     report = {
         "missing_channels": [],
@@ -254,8 +278,37 @@ async def server_reopen(guild: discord.Guild, lockdown_report: dict) -> dict:
         report['missing_channels'] = list(set(report['missing_channels']))
         report['missing_roles'] = list(set(report['missing_roles']))
 
-        # Return report dict
-        return report
+        try:
+            # Return report dict
+            return report
+        finally:
+            # Update database
+            my_db = db == None
+            if my_db:
+                db = await bot.connect_db()
+            try:
+                await update_guild_timestamp(guild, 'LAST_REOPEN', db=db)
+            finally:
+                if my_db:
+                    await db.close()
+
+async def update_guilds(db: aiosqlite.Connection = None):
+    my_db = db == None
+    if my_db:
+        db = await bot.connect_db()
+    
+    try:
+        TARGET_TABLES = ["STATE_INFO", "GUILD_SETTINGS"]
+        db_guilds = {k: {x[0] for x in await db.execute_fetchall(f"SELECT GUILD_ID FROM {k}")} for k in TARGET_TABLES}
+        for guild in bot.guilds:
+            for k in db_guilds.keys():
+                if guild.id not in db_guilds[k]:
+                    await db.execute(f"INSERT INTO {k} (GUILD_ID) VALUES (?)", (guild.id,))
+                    await db.commit()
+    finally:
+        if my_db:
+            await db.close()
+
 
 @bot.event
 async def on_command_error(ctx: commands.Context, error: commands.CommandError):
