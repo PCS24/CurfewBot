@@ -133,3 +133,6 @@ dmypy.json
 
 # Preserve necessary folders
 !.gitkeep
+
+# Databases
+*.db

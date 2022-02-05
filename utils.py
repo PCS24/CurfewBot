@@ -16,7 +16,7 @@ os.chdir(getRootPath())
 
 def genFromTemplate(template_path: os.PathLike, target_path: os.PathLike):
     """
-    Detects if a config file is missing, and generates it from its template if it is.
+    Detects if a file is missing, and generates it from its template if it is.
     """
     if not os.path.exists(target_path):
         with open(template_path, 'rb') as template_file:
@@ -67,6 +67,7 @@ class CurfewBot(commands.Bot):
     def __init__(self, config, *args, **kwargs):
         super(CurfewBot, self).__init__(*args, **kwargs)
         self.config = config
+        genFromTemplate("Static/main.template_db", "Database\main.db")
 
 def getPrefix(bot: CurfewBot, message: discord.Message) -> str:
     """
