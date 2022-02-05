@@ -1,4 +1,4 @@
-py-cord>=2.0.0b1
+py-cord>=2.0.0b2
 jishaku>=2.3.2
 pyyaml>=5.4.1
 ruamel.yaml>=0.17.9
