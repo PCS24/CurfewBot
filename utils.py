@@ -5,6 +5,9 @@ from typing import Sequence, List, Iterable, Set, Union
 import discord
 from discord.ext import commands
 import copy
+import aiosqlite
+
+DATABASE_PATH = "Database\main.db"
 
 def getRootPath() -> Union[os.PathLike, str]:
     """
@@ -67,7 +70,10 @@ class CurfewBot(commands.Bot):
     def __init__(self, config, *args, **kwargs):
         super(CurfewBot, self).__init__(*args, **kwargs)
         self.config = config
-        genFromTemplate("Static/main.template_db", "Database\main.db")
+        genFromTemplate("Static/main.template_db", DATABASE_PATH)
+        
+    async def connect_db(self) -> aiosqlite.Connection:
+        return await aiosqlite.connect(DATABASE_PATH)
 
 def getPrefix(bot: CurfewBot, message: discord.Message) -> str:
     """
