@@ -2,5 +2,5 @@ py-cord>=2.0.0b3
 jishaku>=2.3.2
 pyyaml>=5.4.1
 ruamel.yaml>=0.17.9
-discord-emoji>=1.3.1
+discord-emoji==1.3.1
 python-dotenv>=0.17.1
