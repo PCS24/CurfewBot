@@ -331,6 +331,7 @@ async def on_command_error(ctx: commands.Context, error: commands.CommandError):
 @bot.event
 async def on_ready():
     logging.info("CurfewBot online")
+    await update_guilds()
 
 if bot.config['Bot']['jishaku']:
     bot.load_extension('jishaku')
