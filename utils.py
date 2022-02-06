@@ -75,6 +75,23 @@ class CurfewBot(commands.Bot):
     async def connect_db(self) -> aiosqlite.Connection:
         return await aiosqlite.connect(DATABASE_PATH)
 
+    async def get_target_roles(self, guild: discord.Guild, db: aiosqlite.Connection = None) -> List[discord.Role]:
+        my_db = db == None
+        if my_db:
+            db = await self.connect_db()
+        try:
+            roles_raw = (await (await db.execute("SELECT TARGET_ROLES FROM GUILD_SETTINGS WHERE GUILD_ID=?", (guild.id,))).fetchone())[0]
+            if roles_raw == None:
+                roles = []
+            else:
+                roles = roles_raw.split(",")
+                roles = [guild.get_role(int(x)) for x in roles if x.isnumeric()]
+
+            return roles
+        finally:
+            if my_db:
+                await db.close()
+
     def getColor(self, key: str) -> int:
         return int('0x' + self.config['Colors'][key], base=16)
 
