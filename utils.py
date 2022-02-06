@@ -77,6 +77,10 @@ class CurfewBot(commands.Bot):
 
     def getColor(self, key: str) -> int:
         return int('0x' + self.config['Colors'][key], base=16)
+
+    def getPlaceholder(self, key: str) -> str:
+        return self.config['Bot']['placeholders'][key]
+
 def getPrefix(bot: CurfewBot, message: discord.Message) -> str:
     """
     When a prefix-change command is implemented for external servers, this function will get the custom prefix
