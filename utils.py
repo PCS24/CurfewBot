@@ -75,6 +75,8 @@ class CurfewBot(commands.Bot):
     async def connect_db(self) -> aiosqlite.Connection:
         return await aiosqlite.connect(DATABASE_PATH)
 
+    def getColor(self, key: str) -> int:
+        return int('0x' + self.config['Colors'][key], base=16)
 def getPrefix(bot: CurfewBot, message: discord.Message) -> str:
     """
     When a prefix-change command is implemented for external servers, this function will get the custom prefix

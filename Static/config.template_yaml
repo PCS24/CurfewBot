@@ -1,6 +1,6 @@
 Metadata:
   # DO NOT EDIT
-  VERSION: 0.003
+  VERSION: 0.004
 
 Logging:
   # Should be 'DEBUG', 'INFO', 'WARNING', 'ERROR', or 'CRITICAL'
@@ -46,3 +46,8 @@ Bot:
     stop: ":stop_button:"
     restart: ":repeat:"
     skip: ":fast_forward:"
+
+Colors:
+  # Hex codes without hashtags
+  primary: 
+  secondary: 
