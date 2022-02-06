@@ -101,6 +101,8 @@ async def update_guild_timestamp(guild: discord.Guild, column: str, db: aiosqlit
 async def server_lockdown(guild: discord.Guild, target_roles: List[discord.Role], whitelisted_channel_ids: List[int], db: aiosqlite.Connection = None) -> dict:
     # Given the target server and the roles provided from the owner's config, lock down the server.
     # Input validation will be handled by the commands. Do not worry about it here, for the most part.
+
+    logger.info(f"Locking down guild {guild.id}.")
     
     # Create report dict
     report = {
@@ -175,7 +177,11 @@ async def server_lockdown(guild: discord.Guild, target_roles: List[discord.Role]
 
                 # Delay to prevent ratelimiting
                 await asyncio.sleep(len(roles) / 50)
-    
+    except:
+        logger.info(f"Lockdown of guild {guild.id} (may have) failed.")
+        raise
+    else:
+        logger.info(f"Lockdown of guild {guild.id} was successful.")
     finally:
         # Return report dict
         try:
@@ -192,6 +198,8 @@ async def server_lockdown(guild: discord.Guild, target_roles: List[discord.Role]
                     await db.close()
 
 async def server_reopen(guild: discord.Guild, lockdown_report: dict, db: aiosqlite.Connection = None) -> dict:
+    logger.info(f"Reopening guild {guild.id}.")
+    
     # Create report dict
     report = {
         "missing_channels": [],
@@ -272,7 +280,11 @@ async def server_reopen(guild: discord.Guild, lockdown_report: dict, db: aiosqli
 
             # Delay to prevent ratelimiting
             await asyncio.sleep(len(lockdown_report['affected_roles']) / 50)
-    
+    except:
+        logger.info(f"Reopening of guild {guild.id} (may have) failed.")
+        raise
+    else:
+        logger.info(f"Reopening of guild {guild.id} was successful.")
     finally:
         # Finalize report
         report['missing_channels'] = list(set(report['missing_channels']))
