@@ -75,22 +75,27 @@ class CurfewBot(commands.Bot):
     async def connect_db(self) -> aiosqlite.Connection:
         return await aiosqlite.connect(DATABASE_PATH)
 
-    async def get_target_roles(self, guild: discord.Guild, db: aiosqlite.Connection = None) -> List[discord.Role]:
+    async def _get_list_column(self, guild: discord.Guild, column: str, db: aiosqlite.Connection = None) -> List[int]:
         my_db = db == None
         if my_db:
             db = await self.connect_db()
         try:
-            roles_raw = (await (await db.execute("SELECT TARGET_ROLES FROM GUILD_SETTINGS WHERE GUILD_ID=?", (guild.id,))).fetchone())[0]
-            if roles_raw == None:
-                roles = []
+            items_raw = (await (await db.execute(f"SELECT \"{column}\" FROM GUILD_SETTINGS WHERE GUILD_ID=?", (guild.id,))).fetchone())[0]
+            if items_raw == None:
+                items = []
             else:
-                roles = roles_raw.split(",")
-                roles = [guild.get_role(int(x)) for x in roles if x.isnumeric()]
+                items = items_raw.split(",")
 
-            return roles
+            return items
         finally:
             if my_db:
                 await db.close()
+
+    async def get_target_roles(self, guild: discord.Guild, db: aiosqlite.Connection = None) -> List[discord.Role]:
+        return [guild.get_role(int(x)) for x in (await self._get_list_column(guild, "TARGET_ROLES", db=db)) if x.isnumeric()]
+
+    async def get_ignored_channels(self, guild: discord.Guild, db: aiosqlite.Connection = None) -> List[discord.abc.GuildChannel]:
+        return [guild.get_channel(int(x)) for x in (await self._get_list_column(guild, "IGNORED_CHANNELS", db=db)) if x.isnumeric()]
 
     def getColor(self, key: str) -> int:
         return int('0x' + self.config['Colors'][key], base=16)
