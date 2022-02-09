@@ -143,7 +143,7 @@ class ServerConfigCog(commands.Cog, name=NAME, description=DESCRIPTION):
                                 enabled = (await ((await db.execute("SELECT USE_CALENDAR FROM GUILD_SETTINGS WHERE GUILD_ID=?", (ctx.guild.id,))).fetchone()))[0]
                             finally:
                                 await db.close()
-                            await ctx.respond(f"Automatic lockdowns and reopenings using the synchronized calendar are currently **{'enabled' if enabled else 'disabled'}**.")
+                            await ctx.respond(f"Automatic lockdowns and reopenings using the synchronized calendar are currently **{'enabled' if enabled else 'disabled'}**.", ephemeral=True)
 
 def setup(bot: utils.CurfewBot):
     bot.add_cog(ServerConfigCog(bot))
