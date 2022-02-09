@@ -85,6 +85,65 @@ class ServerConfigCog(commands.Cog, name=NAME, description=DESCRIPTION):
                         async def unignore_channel(ctx: ApplicationContext, channel: channel_option):
                             await edit_object_list(ctx, 'channel', ctx.bot.get_ignored_channels, False, channel, "IGNORED_CHANNELS")
 
+                @self.subgroup("logs", "Manage logging features. Enabling logs is strongly recommended.")
+                class LogsGroup(discord.SlashCommandGroup):
+                    def __init__(self, *args, **kwargs):
+                        super(type(self), self).__init__(*args, **kwargs)
+
+                        @self.command(name="setchannel", description="Sets the channel where logs will be sent.")
+                        async def set_log_channel(ctx: ApplicationContext, channel: discord.TextChannel):
+                            db = await ctx.bot.connect_db()
+                            try:
+                                await db.execute("UPDATE GUILD_SETTINGS SET LOG_CHANNEL=? WHERE GUILD_ID=?", (channel.id, ctx.guild.id))
+                                await db.commit()
+                            finally:
+                                await db.close()
+                            await ctx.respond(f"{ctx.bot.getPlaceholder('success')} Log channel has been set to {channel.mention}.", ephemeral=True)
+
+                        @self.command(name="toggle", description="Toggles logging.")
+                        async def toggle_logs(ctx: ApplicationContext):
+                            db = await ctx.bot.connect_db()
+                            try:
+                                current_state = (await (await db.execute("SELECT LOGS_ENABLED FROM GUILD_SETTINGS WHERE GUILD_ID=?", (ctx.guild.id,))).fetchone())[0]
+                                await db.execute("UPDATE GUILD_SETTINGS SET LOGS_ENABLED=? WHERE GUILD_ID=?", (0 if current_state else 1, ctx.guild.id))
+                                await db.commit()
+                            finally:
+                                await db.close()
+                            await ctx.respond(f"{ctx.bot.getPlaceholder('success')} Logging has been **{'disabled' if current_state else 'enabled'}**.", ephemeral=True)
+
+                        @self.command(name="get", description="Allows you to view the current logging settings.")
+                        async def get_logging_settings(ctx: ApplicationContext):
+                            db = await ctx.bot.connect_db()
+                            try:
+                                enabled, channel_id = (await (await db.execute("SELECT LOGS_ENABLED, LOG_CHANNEL FROM GUILD_SETTINGS WHERE GUILD_ID=?", (ctx.guild.id,))).fetchone())
+                            finally:
+                                await db.close()
+                            await ctx.respond(f"Logging is currently **{'enabled' if enabled else 'disabled'}**{f' in channel <#{channel_id}>' if channel_id != None else ''}.", ephemeral=True)
+
+                @self.subgroup("calendar", "Manage automatic lockdowns/reopenings based on the bot's synchronized calendar.")
+                class CalendarGroup(discord.SlashCommandGroup):
+                    def __init__(self, *args, **kwargs):
+                        super(type(self), self).__init__(*args, **kwargs)
+
+                        @self.command(name="toggle", description="Toggles whether the bot should automatically lockdown/reopen using the synced calendar.")
+                        async def toggle_sync(ctx: ApplicationContext):
+                            db = await ctx.bot.connect_db()
+                            try:
+                                current_state = (await (await db.execute("SELECT USE_CALENDAR FROM GUILD_SETTINGS WHERE GUILD_ID=?", (ctx.guild.id,))).fetchone())[0]
+                                await db.execute("UPDATE GUILD_SETTINGS SET USE_CALENDAR=? WHERE GUILD_ID=?", (0 if current_state else 1, ctx.guild.id))
+                                await db.commit()
+                            finally:
+                                await db.close()
+                            await ctx.respond(f"{ctx.bot.getPlaceholder('success')} Calendar scheduling has been **{'disabled' if current_state else 'enabled'}**.", ephemeral=True)
+
+                        @self.command(name="get", description="Allows you to view the current calendar settings.")
+                        async def get_calendar_settings(ctx: ApplicationContext):
+                            db = await ctx.bot.connect_db()
+                            try:
+                                enabled = (await ((await db.execute("SELECT USE_CALENDAR FROM GUILD_SETTINGS WHERE GUILD_ID=?", (ctx.guild.id,))).fetchone()))[0]
+                            finally:
+                                await db.close()
+                            await ctx.respond(f"Automatic lockdowns and reopenings using the synchronized calendar are currently **{'enabled' if enabled else 'disabled'}**.")
 
 def setup(bot: utils.CurfewBot):
     bot.add_cog(ServerConfigCog(bot))
