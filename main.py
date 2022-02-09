@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 import datetime
 import sys
 from typing import List, Set
+import json
 
 load_dotenv()
 
@@ -112,6 +113,7 @@ async def server_lockdown(guild: discord.Guild, target_roles: List[discord.Role]
         'no_perms_roles': [] # List of IDs of roles the bot has no permission to edit
     } # Since the default role has an ID, it will be included in the reports without special accommodation
 
+    success = False
     try:
         # Iterate over each unwhitelisted channel in the server:
         channels = [x for x in guild.channels if x.id not in whitelisted_channel_ids]
@@ -181,8 +183,12 @@ async def server_lockdown(guild: discord.Guild, target_roles: List[discord.Role]
         logger.info(f"Lockdown of guild {guild.id} (may have) failed.")
         raise
     else:
+        success = True
         logger.info(f"Lockdown of guild {guild.id} was successful.")
     finally:
+        # Broadcast event
+        if success:
+            bot.dispatch('guild_lockdown', guild, report)
         # Return report dict
         try:
             return report
@@ -208,6 +214,8 @@ async def server_reopen(guild: discord.Guild, lockdown_report: dict, db: aiosqli
         "no_perms_roles": [],
         "no_perms_channels": []
     }
+    
+    success = False
 
     try:
         # Iterate over each affected channel in lockdown_report:
@@ -284,11 +292,16 @@ async def server_reopen(guild: discord.Guild, lockdown_report: dict, db: aiosqli
         logger.info(f"Reopening of guild {guild.id} (may have) failed.")
         raise
     else:
+        success = True
         logger.info(f"Reopening of guild {guild.id} was successful.")
     finally:
         # Finalize report
         report['missing_channels'] = list(set(report['missing_channels']))
         report['missing_roles'] = list(set(report['missing_roles']))
+
+        # Broadcast event
+        if success:
+            bot.dispatch('guild_reopen', guild, report, lockdown_report)
 
         try:
             # Return report dict
