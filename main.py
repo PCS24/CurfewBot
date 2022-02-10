@@ -61,7 +61,7 @@ bot = utils.CurfewBot(CONFIG, command_prefix=utils.getPrefix, intents=discord.In
 
 # Load cogs
 # Add cog paths each time one is created
-COGS = ['Cogs.ServerConfig.serverconfig']
+COGS = ['Cogs.ServerConfig.serverconfig', 'Cogs.LogMessages.logmessages']
 
 for cog in COGS:
     try:
