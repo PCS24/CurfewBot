@@ -1,7 +1,7 @@
 import os
 from ruamel.yaml import YAML
 yaml = YAML()
-from typing import Sequence, List, Iterable, Set, Union
+from typing import Sequence, List, Iterable, Set, Union, Optional
 import discord
 from discord.ext import commands
 import copy
@@ -96,6 +96,33 @@ class CurfewBot(commands.Bot):
 
     async def get_ignored_channels(self, guild: discord.Guild, db: aiosqlite.Connection = None) -> List[discord.abc.GuildChannel]:
         return [guild.get_channel(int(x)) for x in (await self._get_list_column(guild, "IGNORED_CHANNELS", db=db)) if x.isnumeric()]
+
+    async def get_log_channel(self, guild: discord.Guild, db: aiosqlite.Connection = None) -> Optional[discord.TextChannel]:
+        my_db = db == None
+        if my_db:
+            db = await self.connect_db()
+        try:
+            channel_id = (await (await db.execute("SELECT LOG_CHANNEL FROM GUILD_SETTINGS WHERE GUILD_ID=?", (ctx.guild.id,))).fetchone())[0]
+        finally:
+            if my_db:
+                await db.close()
+        
+        channel = None
+        if channel_id != None:
+            channel = guild.get_channel(channel_id)
+        return channel
+
+    async def get_logs_enabled(self, guild: discord.Guild, db: aiosqlite.Connection = None) -> bool:
+        my_db = db == None
+        if my_db:
+            db = await self.connect_db()
+        try:
+            enabled = (await (await db.execute("SELECT LOGS_ENABLED FROM GUILD_SETTINGS WHERE GUILD_ID=?", (ctx.guild.id,))).fetchone())[0]
+        finally:
+            if my_db:
+                await db.close()
+        
+        return bool(enabled)
 
     def getColor(self, key: str) -> int:
         return int('0x' + self.config['Colors'][key], base=16)
