@@ -92,6 +92,10 @@ class ServerConfigCog(commands.Cog, name=NAME, description=DESCRIPTION):
 
                         @self.command(name="setchannel", description="Sets the channel where logs will be sent.")
                         async def set_log_channel(ctx: ApplicationContext, channel: discord.TextChannel):
+                            channel_perms: discord.Permissions = channel.permissions_for(ctx.guild.me)
+                            if not (channel_perms.view_channel and channel_perms.send_messages and channel_perms.use_external_emojis and channel_perms.embed_links and channel_perms.attach_files):
+                                await ctx.respond(f"{ctx.bot.getPlaceholder('error')} Please make sure I have all of the following permissions in {channel.mention} first: `View Channel`, `Send Messages`, `Embed Links`, `Attach Files`, and `Use External Emojis`.")
+                                return
                             db = await ctx.bot.connect_db()
                             try:
                                 await db.execute("UPDATE GUILD_SETTINGS SET LOG_CHANNEL=? WHERE GUILD_ID=?", (channel.id, ctx.guild.id))
