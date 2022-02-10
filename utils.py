@@ -102,7 +102,7 @@ class CurfewBot(commands.Bot):
         if my_db:
             db = await self.connect_db()
         try:
-            channel_id = (await (await db.execute("SELECT LOG_CHANNEL FROM GUILD_SETTINGS WHERE GUILD_ID=?", (ctx.guild.id,))).fetchone())[0]
+            channel_id = (await (await db.execute("SELECT LOG_CHANNEL FROM GUILD_SETTINGS WHERE GUILD_ID=?", (guild.id,))).fetchone())[0]
         finally:
             if my_db:
                 await db.close()
@@ -117,7 +117,7 @@ class CurfewBot(commands.Bot):
         if my_db:
             db = await self.connect_db()
         try:
-            enabled = (await (await db.execute("SELECT LOGS_ENABLED FROM GUILD_SETTINGS WHERE GUILD_ID=?", (ctx.guild.id,))).fetchone())[0]
+            enabled = (await (await db.execute("SELECT LOGS_ENABLED FROM GUILD_SETTINGS WHERE GUILD_ID=?", (guild.id,))).fetchone())[0]
         finally:
             if my_db:
                 await db.close()
