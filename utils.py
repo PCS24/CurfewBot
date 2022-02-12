@@ -136,3 +136,9 @@ def getPrefix(bot: CurfewBot, message: discord.Message) -> str:
     """
     return bot.config['Bot']['default_prefix']
 
+
+def check_embed(embed: discord.Embed) -> bool:
+    """
+    Evaluates all limits of embeds and returns whether or not they are satisfied.
+    """
+    return len(embed) <= 6000 and len(embed.fields) <= 25 and all(len(field.title) <= 256 and len(field.value) <= 1024 for field in embed.fields) and len(embed.title) <= 256 and len(embed.description) <= 4096 and len(embed.footer) <= 2048
