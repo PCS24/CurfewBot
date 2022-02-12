@@ -203,6 +203,8 @@ async def server_lockdown(guild: discord.Guild, target_roles: List[discord.Role]
                 db = await bot.connect_db()
             try:
                 await update_guild_timestamp(guild, 'LAST_LOCKDOWN', db=db)
+                await db.execute("UPDATE STATE_INFO SET LAST_LOCKDOWN_REPORT=? WHERE GUILD_ID=?", (json.dumps(report), guild.id))
+                await db.commit()
             finally:
                 if my_db:
                     await db.close()
