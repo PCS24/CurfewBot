@@ -99,7 +99,7 @@ async def update_guild_timestamp(guild: discord.Guild, column: str, db: aiosqlit
         if my_db:
             await db.close()
 
-async def server_lockdown(guild: discord.Guild, target_roles: List[discord.Role], whitelisted_channel_ids: List[int], db: aiosqlite.Connection = None) -> dict:
+async def server_lockdown(guild: discord.Guild, target_roles: List[discord.Role], whitelisted_channel_ids: List[int], db: aiosqlite.Connection = None, meta: dict = {}) -> dict:
     # Given the target server and the roles provided from the owner's config, lock down the server.
     # Input validation will be handled by the commands. Do not worry about it here, for the most part.
 
@@ -110,7 +110,8 @@ async def server_lockdown(guild: discord.Guild, target_roles: List[discord.Role]
         'affected_channels': {}, # Each channel's ID will become a key (as a string) in this nested dict and the value will be a list of lists of the IDs of all affected roles and their previous permission states
         'affected_roles': [], # List of IDs of affected roles from target_roles plus the default role
         'no_perms_channels': [], # List of IDs of channels the bot has no permission to edit
-        'no_perms_roles': [] # List of IDs of roles the bot has no permission to edit
+        'no_perms_roles': [], # List of IDs of roles the bot has no permission to edit
+        'meta': {'provided': meta}
     } # Since the default role has an ID, it will be included in the reports without special accommodation
 
     success = False
@@ -189,7 +190,10 @@ async def server_lockdown(guild: discord.Guild, target_roles: List[discord.Role]
         # Broadcast event
         if success:
             bot.dispatch('guild_lockdown', guild, report)
+
         # Return report dict
+        report['meta']['timestamp'] = datetime.datetime.now().timestamp()
+        report['meta']['guild_id'] = guild.id
         try:
             return report
         finally:
@@ -203,7 +207,7 @@ async def server_lockdown(guild: discord.Guild, target_roles: List[discord.Role]
                 if my_db:
                     await db.close()
 
-async def server_reopen(guild: discord.Guild, lockdown_report: dict, db: aiosqlite.Connection = None) -> dict:
+async def server_reopen(guild: discord.Guild, lockdown_report: dict, db: aiosqlite.Connection = None, meta: dict = {}) -> dict:
     logger.info(f"Reopening guild {guild.id}.")
     
     # Create report dict
@@ -212,7 +216,8 @@ async def server_reopen(guild: discord.Guild, lockdown_report: dict, db: aiosqli
         "missing_roles": [],
         "missing_overwrites": {}, # Keys, stringified channel IDs. Values, lists of role IDs.
         "no_perms_roles": [],
-        "no_perms_channels": []
+        "no_perms_channels": [],
+        "meta": {'provided': meta}
     }
     
     success = False
@@ -298,6 +303,8 @@ async def server_reopen(guild: discord.Guild, lockdown_report: dict, db: aiosqli
         # Finalize report
         report['missing_channels'] = list(set(report['missing_channels']))
         report['missing_roles'] = list(set(report['missing_roles']))
+        report['meta']['timestamp'] = datetime.datetime.now().timestamp()
+        report['meta']['guild_id'] = guild.id
 
         # Broadcast event
         if success:
