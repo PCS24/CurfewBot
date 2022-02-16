@@ -56,7 +56,7 @@ class AutoLockdownCog(commands.Cog, name=NAME, description=DESCRIPTION):
 
                     # Lock down server
                     logger.info(f"Automatically locking down guild {guild_row[0]}.")
-                    await self.bot.server_lockdown(guild, target_roles, whitelisted_channel_ids, meta=report_meta)
+                    await self.bot.server_lockdown(guild, target_roles, whitelisted_channel_ids, meta=report_meta, db=db)
 
                 elif action_info[0] == 'REOPEN':
                     # Check if server is already opened
@@ -65,7 +65,7 @@ class AutoLockdownCog(commands.Cog, name=NAME, description=DESCRIPTION):
 
                     # Reopen server
                     logger.info(f"Automatically reopening guild {guild_row[0]}.")
-                    await self.bot.server_reopen(guild, json.loads(guild_row[3]), meta=report_meta)
+                    await self.bot.server_reopen(guild, json.loads(guild_row[3]), meta=report_meta, db=db)
 
                 await asyncio.sleep(2) # Delay to prevent ratelimiting
 
