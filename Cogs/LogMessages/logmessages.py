@@ -19,6 +19,9 @@ class LogMessagesCog(commands.Cog, name=NAME, description=DESCRIPTION):
     def __init__(self, bot: utils.CurfewBot):
         self.bot = bot
 
+    def is_auto(self, report: dict) -> bool:
+        return report['meta']['provided'].get('auto') == True
+
     @commands.Cog.listener()
     async def on_guild_lockdown(self, guild: discord.Guild, report: dict):
         log_channel = await self.bot.get_log_channel(guild)
@@ -27,7 +30,8 @@ class LogMessagesCog(commands.Cog, name=NAME, description=DESCRIPTION):
         
         embed = discord.Embed(
             title="Server Locked Down",
-            color=self.bot.getColor('secondary')
+            color=self.bot.getColor('secondary'),
+            description=("This action was **automatic**." if self.is_auto(report) else discord.Embed.Empty),
         )
 
         if len(report['affected_roles']) > 0:
@@ -57,7 +61,8 @@ class LogMessagesCog(commands.Cog, name=NAME, description=DESCRIPTION):
         
         embed = discord.Embed(
             title="Server Reopened",
-            color=self.bot.getColor('secondary')
+            color=self.bot.getColor('secondary'),
+            description=("This action was **automatic**." if self.is_auto(report) else discord.Embed.Empty),
         )
 
         if len(report['missing_roles']) > 0:
