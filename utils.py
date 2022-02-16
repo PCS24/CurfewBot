@@ -13,6 +13,7 @@ import traceback
 import asyncio
 
 DATABASE_PATH = "Database\main.db"
+CALENDAR_PATH = "Database\calendar.db"
 
 def getRootPath() -> Union[os.PathLike, str]:
     """
@@ -85,9 +86,13 @@ class CurfewBot(commands.Bot):
         self.config = config
         self.logger = logging.getLogger('bot')
         genFromTemplate("Static/main.template_db", DATABASE_PATH)
+        genFromTemplate("Static/calendar.template_db", CALENDAR_PATH)
         
     async def connect_db(self) -> aiosqlite.Connection:
         return await aiosqlite.connect(DATABASE_PATH)
+
+    async def connect_calendar(self) -> aiosqlite.Connection:
+        return await aiosqlite.connect(CALENDAR_PATH)
 
     async def _get_list_column(self, guild: discord.Guild, column: str, db: aiosqlite.Connection = None) -> List[int]:
         my_db = db == None
