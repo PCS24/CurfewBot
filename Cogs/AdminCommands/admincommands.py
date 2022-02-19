@@ -11,6 +11,7 @@ from typing import Coroutine, Any, Union, Callable
 from io import BytesIO
 import json
 import traceback
+from schema import SchemaError
 
 logger = logging.getLogger('cog-serverconfig')
 

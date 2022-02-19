@@ -11,6 +11,7 @@ import datetime
 import json
 import traceback
 import asyncio
+from schema import Schema, And
 
 DATABASE_PATH = "Database\main.db"
 CALENDAR_PATH = "Database\calendar.db"
@@ -420,3 +421,17 @@ def check_embed(embed: discord.Embed) -> bool:
     Evaluates all limits of embeds and returns whether or not they are satisfied.
     """
     return len(embed) <= 6000 and len(embed.fields) <= 25 and all(len(field.title) <= 256 and len(field.value) <= 1024 for field in embed.fields) and len(embed.title) <= 256 and len(embed.description) <= 4096 and len(embed.footer) <= 2048
+
+def affected_channels_validator(d: dict) -> bool:
+    return isinstance(d, dict) and all(isinstance(x, str) and x.isnumeric() and len(x) == 18 for x in d.keys()) and all(isinstance(x, list) and all(isinstance(y, list) and len(y) == 2 and isinstance(y[0], int) and isinstance(y[1], int) and len(str(y[0])) == 18 and y[1] in range(-1, 2) for y in x) for x in d.values())
+
+def id_list_validator(d: dict) -> bool:
+    return isinstance(d, list) and all(isinstance(x, int) and len(str(x)) == 18 for x in d)
+
+LOCKDOWN_REPORT_SCHEMA = Schema({
+    "affected_channels": And(affected_channels_validator, dict),
+    "affected_roles": And(id_list_validator, list),
+    "no_perms_channels": And(id_list_validator, list),
+    "no_perms_roles": And(id_list_validator, list),
+    "meta": dict
+})
