@@ -46,5 +46,33 @@ class AdminCommandsCog(commands.Cog, name=NAME, description=DESCRIPTION):
                 await db.close()
             await ctx.respond("Successfully locked down the server.", file=discord.File(fp=BytesIO(json.dumps(report).encode('utf8')), filename="report.json"))
 
+        @commands.has_guild_permissions(administrator=True)
+        @self.bot.slash_command(name="reopen", description="Reopens the server and returns the report file.")
+        async def reopen_command(ctx: ApplicationContext, lockdown_report: discord.Attachment = None):
+            await ctx.defer()
+
+            # Validate lockdown report
+            try:
+                assert lockdown_report.filename.endswith(".json")
+                assert lockdown_report.content_type == "application/json; charset=utf-8"
+                try:
+                    input_json = json.loads(await lockdown_report.read())
+                except ValueError:
+                    # JSON not readable
+                    assert False
+                assert utils.LOCKDOWN_REPORT_SCHEMA.is_valid(input_json)
+            except (AssertionError, SchemaError):
+                await ctx.respond(f"{ctx.bot.getPlaceholder('error')} Please make sure the file you uploaded is a valid lockdown report file. If this issue continues, contact the developer.")
+                return
+
+            logger.info(f"User {ctx.author.id} is reopening guild {ctx.guild.id}.")
+            db = await ctx.bot.connect_db()
+            try:
+                report = await ctx.bot.server_reopen(ctx.guild, input_json, db=db, meta=get_meta(ctx))
+            finally:
+                await db.close()
+            await ctx.respond("Successfully reopened the server.", file=discord.File(fp=BytesIO(json.dumps(report).encode('utf8')), filename="report.json"))
+
+
 def setup(bot: utils.CurfewBot):
     bot.add_cog(AdminCommandsCog(bot))
