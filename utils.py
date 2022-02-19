@@ -244,8 +244,8 @@ class CurfewBot(commands.Bot):
                     # Delay to prevent ratelimiting
                     await asyncio.sleep(len(roles) / 50)
         except:
-            self.logger.info(f"Lockdown of guild {guild.id} (may have) failed. Traceback below.")
-            traceback.print_exc()
+            self.logger.error(f"Lockdown of guild {guild.id} (may have) failed. Traceback below.")
+            self.logger.error(traceback.format_exc())
             raise
         else:
             success = True
@@ -360,8 +360,8 @@ class CurfewBot(commands.Bot):
                 # Delay to prevent ratelimiting
                 await asyncio.sleep(len(lockdown_report['affected_roles']) / 50)
         except:
-            self.logger.info(f"Reopening of guild {guild.id} (may have) failed. Traceback below.")
-            traceback.print_exc()
+            self.logger.error(f"Reopening of guild {guild.id} (may have) failed. Traceback below.")
+            self.logger.error(traceback.format_exc())
             raise
         else:
             success = True

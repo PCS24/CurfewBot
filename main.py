@@ -81,10 +81,13 @@ async def ping(ctx: ApplicationContext):
 
 
 @bot.event
-async def on_application_command_error(ctx: commands.Context, error: commands.CommandError):
+async def on_application_command_error(ctx: ApplicationContext, error: commands.CommandError):
     error = getattr(error, "original", error)
-    if ctx.command != None:
-        logging.exception(f"'{type(error)}' exception occurred while executing command \'{ctx.command.name}\': {error}")
+    if hasattr(ctx.command, 'name'):
+        logger.error(f"'{type(error)}' exception occurred while executing command \'{ctx.command.name}\': {error}")
+        formatted_exc = traceback.format_exception(error, value=error, tb=error.__traceback__)
+        for l in ''.join(formatted_exc).split('\n'):
+            logger.error(l)
 
 @bot.event
 async def on_ready():
