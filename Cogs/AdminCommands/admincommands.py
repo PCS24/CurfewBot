@@ -51,23 +51,30 @@ class AdminCommandsCog(commands.Cog, name=NAME, description=DESCRIPTION):
         async def reopen_command(ctx: ApplicationContext, lockdown_report: discord.Attachment = None):
             await ctx.defer()
 
-            # Validate lockdown report
-            try:
-                assert lockdown_report.filename.endswith(".json")
-                assert lockdown_report.content_type == "application/json; charset=utf-8"
+            if lockdown_report != None:
+                # Validate lockdown report
                 try:
-                    input_json = json.loads(await lockdown_report.read())
-                except ValueError:
-                    # JSON not readable
-                    assert False
-                assert utils.LOCKDOWN_REPORT_SCHEMA.is_valid(input_json)
-            except (AssertionError, SchemaError):
-                await ctx.respond(f"{ctx.bot.getPlaceholder('error')} Please make sure the file you uploaded is a valid lockdown report file. If this issue continues, contact the developer.")
-                return
+                    assert lockdown_report.filename.endswith(".json")
+                    assert lockdown_report.content_type == "application/json; charset=utf-8"
+                    try:
+                        input_json = json.loads(await lockdown_report.read())
+                    except ValueError:
+                        # JSON not readable
+                        assert False
+                    assert utils.LOCKDOWN_REPORT_SCHEMA.is_valid(input_json)
+                except (AssertionError, SchemaError):
+                    await ctx.respond(f"{ctx.bot.getPlaceholder('error')} Please make sure the file you uploaded is a valid lockdown report file. If this issue continues, contact the developer.")
+                    return
 
             logger.info(f"User {ctx.author.id} is reopening guild {ctx.guild.id}.")
             db = await ctx.bot.connect_db()
             try:
+                if lockdown_report == None:
+                    input_json = (await (await db.execute("SELECT LAST_LOCKDOWN_REPORT FROM STATE_INFO WHERE GUILD_ID=?", (ctx.guild.id,))).fetchone())[0]
+                    if input_json == None:
+                        await ctx.respond(f"{ctx.bot.getPlaceholder('error')} There doesn't seem to be an existing lockdown report in my records. Please upload one if you have one.")
+                        return
+                    input_json = json.loads(input_json)
                 report = await ctx.bot.server_reopen(ctx.guild, input_json, db=db, meta=get_meta(ctx))
             finally:
                 await db.close()
