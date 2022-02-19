@@ -13,7 +13,7 @@ import json
 import traceback
 from schema import SchemaError
 
-logger = logging.getLogger('cog-serverconfig')
+logger = logging.getLogger('cog-admincommands')
 
 NAME = "Admin Commands"
 DESCRIPTION = "Commands for server owners and admins to manually operate the bot."
