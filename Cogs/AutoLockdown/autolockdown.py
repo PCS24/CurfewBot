@@ -70,8 +70,12 @@ class AutoLockdownCog(commands.Cog, name=NAME, description=DESCRIPTION):
                 await asyncio.sleep(2) # Delay to prevent ratelimiting
 
             # Update status of action in calendar
-            logger.info(f"Task scheduled for {datetime.datetime.fromtimestamp(action_info[1]).isoformat()} ({action_info[1]}) completed.")
+            logger.info(f"{action_info[0]} task scheduled for {datetime.datetime.fromtimestamp(action_info[1]).isoformat()} ({action_info[1]}) completed.")
             await cal.execute("UPDATE CALENDAR SET COMPLETION_TIMESTAMP=?, COMPLETED=? WHERE SCHEDULED_TIMESTAMP=?", (datetime.datetime.now().timestamp(), 1, action_info[1]))
+            
+            # Mark older tasks as completed
+            await cal.execute("UPDATE CALENDAR SET COMPLETED=?, COMPLETION_TIMESTAMP=? WHERE COMPLETED=0 AND SCHEDULED_TIMESTAMP<?", (1, datetime.datetime.now().timestamp(), action_info[1]))
+
             await cal.commit()
                 
         finally:
