@@ -44,7 +44,7 @@ class ServerConfigCog(commands.Cog, name=NAME, description=DESCRIPTION):
 
         @commands.guild_only()
         @commands.has_guild_permissions(administrator=True)
-        @self.bot.slash_group(name=NAME.lower(), description=DESCRIPTION)
+        @self.bot.slash_group(name=NAME.lower().replace(" ", ""), description=DESCRIPTION)
         class ServerConfigGroup(discord.SlashCommandGroup):
             def __init__(self, *args, **kwargs):
                 super(type(self), self).__init__(*args, **kwargs)
