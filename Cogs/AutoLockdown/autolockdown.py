@@ -22,7 +22,7 @@ class AutoLockdownCog(commands.Cog, name=NAME, description=DESCRIPTION):
         self.bot = bot
         self.calendar_poll.start()
 
-    @tasks.loop(seconds=60)
+    @tasks.loop(seconds=600)
     async def calendar_poll(self):
         # Get the oldest uncompleted scheduled task in the calendar whose SCHEDULED_TIMESTAMP is in the past
         # Perform the task and update the calendar as needed
