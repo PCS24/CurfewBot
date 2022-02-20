@@ -221,11 +221,8 @@ class CurfewBot(commands.Bot):
                     if not isinstance(r, discord.Role):
                         continue
 
-                    # [IGNORE] If the role is the guild's default role or it is in target_roles, set "View Channel" to False if not already disabled
-                    # if (r in target_roles or r == guild.default_role) and (new_overwrites[r].view_channel != False):
-
-                    # Set "View Channel" to False if not already disabled
-                    if new_overwrites[r].view_channel != False:
+                    # If the role is not in ignored_roles, set "View Channel" to False if not already disabled
+                    if (r not in ignored_roles) and (r in target_roles or r == guild.default_role or (new_overwrites[r].view_channel != False and not ignore_neutral_overwrites) or (new_overwrites[r].view_channel == True and ignore_neutral_overwrites)):
                         previous_state = STATE_MAP[new_overwrites[r].view_channel]
                         new_overwrites[r].view_channel = False
 
