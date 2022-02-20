@@ -46,17 +46,9 @@ class AutoLockdownCog(commands.Cog, name=NAME, description=DESCRIPTION):
                     if guild_row[1] > guild_row[2]:
                         continue
                     
-                    # Get target role + whitelisted channel IDs
-                    target_role_ids, whitelisted_channel_ids = await (await db.execute("SELECT TARGET_ROLES, IGNORED_CHANNELS FROM GUILD_SETTINGS WHERE GUILD_ID=?", (guild_row[0],))).fetchone()
-                    whitelisted_channel_ids = [int(x) for x in whitelisted_channel_ids.split(',')] if whitelisted_channel_ids != None else []
-
-                    # Get target roles
-                    target_roles = [guild.get_role(int(x)) for x in target_role_ids.split(',')] if target_role_ids != None else []
-                    target_roles = [x for x in target_roles if x != None]
-
                     # Lock down server
                     logger.info(f"Automatically locking down guild {guild_row[0]}.")
-                    await self.bot.server_lockdown(guild, target_roles, whitelisted_channel_ids, meta=report_meta, db=db)
+                    await self.bot.server_lockdown(guild, await self.bot.get_target_roles(guild, db=db), await self.bot.get_ignored_roles(guild, db=db), await self.bot.get_ignored_channel_ids(guild, db=db), await self.bot.get_ignore_overwrites_preference(guild, db=db), meta=get_meta(ctx), db=db)
 
                 elif action_info[0] == 'REOPEN':
                     # Check if server is already opened
