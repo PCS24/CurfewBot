@@ -64,8 +64,8 @@ class ServerConfigCog(commands.Cog, name=NAME, description=DESCRIPTION):
                     new_state = await toggle_column(ctx, "IGNORE_NEUTRAL_OVERWRITES")
                     await ctx.respond(f"{ctx.bot.getPlaceholder('success')} Neutral overwrites will now be **{'ignored' if new_state else 'unignored'}**.", ephemeral=True)
                 
-                @self.subgroup("roles", "Manage the list of roles that are affected by lockdowns and reopenings.")
-                class RolesGroup(discord.SlashCommandGroup):
+                @self.subgroup("target-roles", "Manage the list of roles that are affected by lockdowns and reopenings.")
+                class TargetRolesGroup(discord.SlashCommandGroup):
                     def __init__(self, *args, **kwargs):
                         super(type(self), self).__init__(*args, **kwargs)
 
@@ -81,8 +81,25 @@ class ServerConfigCog(commands.Cog, name=NAME, description=DESCRIPTION):
                         async def remove_role(ctx: ApplicationContext, role: discord.Role):
                             await edit_object_list(ctx, 'role', ctx.bot.get_target_roles, False, role, "TARGET_ROLES")
 
-                @self.subgroup("channels", "Manage the list of channels that are ignored by lockdowns and reopenings.")
-                class ChannelsGroup(discord.SlashCommandGroup):
+                @self.subgroup("ignored-roles", "Manage the list of roles whose channel permissions are ignored by lockdowns and reopenings.")
+                class IgnoredRolesGroup(discord.SlashCommandGroup):
+                    def __init__(self, *args, **kwargs):
+                        super(type(self), self).__init__(*args, **kwargs)
+
+                        @self.command(name="list", description="Lists all roles whose channel permissions are ignored by lockdowns and reopenings.")
+                        async def list_roles(ctx: ApplicationContext):
+                            await list_objects(ctx, 'role', ctx.bot.get_ignored_roles)
+
+                        @self.command(name="add", description="Adds a role to the list of roles whose channel permissions are ignored by lockdowns and reopenings.")
+                        async def add_role(ctx: ApplicationContext, role: discord.Role):
+                            await edit_object_list(ctx, 'role', ctx.bot.get_ignored_roles, True, role, "IGNORED_ROLES")
+
+                        @self.command(name="remove", description="Removes from the list of roles whose channel permissions are ignored by lockdowns and reopenings.")
+                        async def remove_role(ctx: ApplicationContext, role: discord.Role):
+                            await edit_object_list(ctx, 'role', ctx.bot.get_ignored_roles, False, role, "IGNORED_ROLES")
+
+                @self.subgroup("ignored-channels", "Manage the list of channels that are ignored by lockdowns and reopenings.")
+                class IgnoredChannelsGroup(discord.SlashCommandGroup):
                     def __init__(self, *args, **kwargs):
                         super(type(self), self).__init__(*args, **kwargs)
 
