@@ -96,6 +96,7 @@ async def on_ready():
 
 @bot.event
 async def on_guild_join(guild: discord.Guild):
+    await bot.update_guilds()
     await asyncio.sleep(2)
     await guild.owner.send(bot.config['Messages']['on_guild_join_owner_dm'].format(owner_mention=guild.owner.mention, guild_name=guild.name))
 
