@@ -58,6 +58,11 @@ class ServerConfigCog(commands.Cog, name=NAME, description=DESCRIPTION):
         class ServerConfigGroup(discord.SlashCommandGroup):
             def __init__(self, *args, **kwargs):
                 super(type(self), self).__init__(*args, **kwargs)
+
+                @self.command(name="ignore-neutral-overwrites", description="Toggles whether neutral permissions overwrites are ignored.")
+                async def toggle_ignore_neutral_overwrites(ctx: ApplicationContext):
+                    new_state = await toggle_column(ctx, "IGNORE_NEUTRAL_OVERWRITES")
+                    await ctx.respond(f"{ctx.bot.getPlaceholder('success')} Neutral overwrites will now be **{'ignored' if new_state else 'unignored'}**.", ephemeral=True)
                 
                 @self.subgroup("roles", "Manage the list of roles that are affected by lockdowns and reopenings.")
                 class RolesGroup(discord.SlashCommandGroup):
