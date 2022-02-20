@@ -94,6 +94,11 @@ async def on_ready():
     logging.info("CurfewBot online")
     await bot.update_guilds()
 
+@bot.event
+async def on_guild_join(guild: discord.Guild):
+    await asyncio.sleep(2)
+    await guild.owner.send(bot.config['Messages']['on_guild_join_owner_dm'].format(owner_mention=guild.owner.mention, guild_name=guild.name))
+
 if bot.config['Bot']['jishaku']:
     bot.load_extension('jishaku')
     logging.info("Loaded jishaku")
