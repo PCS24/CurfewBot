@@ -111,11 +111,30 @@ class CurfewBot(commands.Bot):
             if my_db:
                 await db.close()
 
+    async def _get_roles(self, guild: discord.Guild, column: str, db: aiosqlite.Connection = None) -> List[discord.Role]:
+        return [guild.get_role(int(x)) for x in (await self._get_list_column(guild, column, db=db)) if x.isnumeric()]
+
     async def get_target_roles(self, guild: discord.Guild, db: aiosqlite.Connection = None) -> List[discord.Role]:
-        return [guild.get_role(int(x)) for x in (await self._get_list_column(guild, "TARGET_ROLES", db=db)) if x.isnumeric()]
+        return await self._get_roles(guild, "TARGET_ROLES", db=db)
+
+    async def get_ignored_roles(self, guild: discord.Guild, db: aiosqlite.Connection = None) -> List[discord.Role]:
+        return await self._get_roles(guild, "IGNORED_ROLES", db=db)
+
+    async def get_ignored_channel_ids(self, guild: discord.Guild, db: aiosqlite.Connection = None) -> List[int]:
+        return [int(x) for x in (await self._get_list_column(guild, "IGNORED_CHANNELS", db=db)) if x.isnumeric()]
 
     async def get_ignored_channels(self, guild: discord.Guild, db: aiosqlite.Connection = None) -> List[discord.abc.GuildChannel]:
-        return [guild.get_channel(int(x)) for x in (await self._get_list_column(guild, "IGNORED_CHANNELS", db=db)) if x.isnumeric()]
+        return [guild.get_channel(x) for x in await self.get_ignored_channel_ids(guild, db=db)]
+
+    async def get_ignore_overwrites_preference(self, guild: discord.Guild, db: aiosqlite.Connection = None) -> bool:
+        my_db = db == None
+        if my_db:
+            db = await self.connect_db()
+        try:
+            return bool((await (await db.execute("SELECT IGNORE_NEUTRAL_OVERWRITES FROM GUILD_SETTINGS WHERE GUILD_ID=?", (guild.id,))).fetchone())[0])
+        finally:
+            if my_db:
+                await db.close()
 
     async def get_log_channel(self, guild: discord.Guild, db: aiosqlite.Connection = None) -> Optional[discord.TextChannel]:
         my_db = db == None
@@ -163,7 +182,7 @@ class CurfewBot(commands.Bot):
             if my_db:
                 await db.close()
 
-    async def server_lockdown(self, guild: discord.Guild, target_roles: List[discord.Role], whitelisted_channel_ids: List[int], db: aiosqlite.Connection = None, meta: dict = {}) -> dict:
+    async def server_lockdown(self, guild: discord.Guild, target_roles: List[discord.Role], ignored_roles: List[discord.Role], whitelisted_channel_ids: List[int], ignore_neutral_overwrites: bool, db: aiosqlite.Connection = None, meta: dict = {}) -> dict:
         # Given the target server and the roles provided from the owner's config, lock down the server.
         # Input validation will be handled by the commands. Do not worry about it here, for the most part.
 
