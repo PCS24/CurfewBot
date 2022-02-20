@@ -43,7 +43,7 @@ class AutoLockdownCog(commands.Cog, name=NAME, description=DESCRIPTION):
                 
                 if action_info[0] == 'LOCKDOWN':
                     # Check if server is already locked down
-                    if guild_row[1] > guild_row[2]:
+                    if guild_row[1] != None and (guild_row[2] == None or guild_row[1] > guild_row[2]):
                         continue
                     
                     # Lock down server
@@ -52,7 +52,7 @@ class AutoLockdownCog(commands.Cog, name=NAME, description=DESCRIPTION):
 
                 elif action_info[0] == 'REOPEN':
                     # Check if server is already opened
-                    if guild_row[1] < guild_row[2]:
+                    if guild_row[2] != None and (guild_row[1] == None or guild_row[2] > guild_row[1]):
                         continue
 
                     # Reopen server
