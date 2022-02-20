@@ -35,7 +35,9 @@ class AutoLockdownCog(commands.Cog, name=NAME, description=DESCRIPTION):
                 return
             
             report_meta = {'auto': True, 'scheduled_timestamp': action_info[1]}
-            guild_rows = await db.execute_fetchall("SELECT * FROM STATE_INFO WHERE GUILD_ID IN (SELECT GUILD_ID FROM GUILD_SETTINGS WHERE USE_CALENDAR=1)")
+
+            # Perform actions on guilds with the least channels first, since they take the least time
+            guild_rows = sorted(await db.execute_fetchall("SELECT * FROM STATE_INFO WHERE GUILD_ID IN (SELECT GUILD_ID FROM GUILD_SETTINGS WHERE USE_CALENDAR=1)"), key=lambda r: len(self.bot.get_guild(r[0]).channels))
             for guild_row in guild_rows:
                 guild = self.bot.get_guild(guild_row[0])
                 if guild == None:
