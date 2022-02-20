@@ -38,6 +38,16 @@ async def edit_object_list(ctx: ApplicationContext, name: str, fetch_func: Calla
         await db.close()
     await ctx.respond(f"{'Added' if appending else 'Removed'} {name} {value.mention} {'to' if appending else 'from'} the list.", ephemeral=True)
 
+async def toggle_column(ctx: ApplicationContext, column: str) -> bool:
+    db = await ctx.bot.connect_db()
+    try:
+        current_state = (await (await db.execute(f"SELECT \"{column}\" FROM GUILD_SETTINGS WHERE GUILD_ID=?", (ctx.guild.id,))).fetchone())[0]
+        await db.execute(f"UPDATE GUILD_SETTINGS SET \"{column}\"=? WHERE GUILD_ID=?", (0 if current_state else 1, ctx.guild.id))
+        await db.commit()
+    finally:
+        await db.close()
+    return not current_state
+
 class ServerConfigCog(commands.Cog, name=NAME, description=DESCRIPTION):
     def __init__(self, bot: utils.CurfewBot):
         self.bot = bot
@@ -106,14 +116,8 @@ class ServerConfigCog(commands.Cog, name=NAME, description=DESCRIPTION):
 
                         @self.command(name="toggle", description="Toggles logging.")
                         async def toggle_logs(ctx: ApplicationContext):
-                            db = await ctx.bot.connect_db()
-                            try:
-                                current_state = (await (await db.execute("SELECT LOGS_ENABLED FROM GUILD_SETTINGS WHERE GUILD_ID=?", (ctx.guild.id,))).fetchone())[0]
-                                await db.execute("UPDATE GUILD_SETTINGS SET LOGS_ENABLED=? WHERE GUILD_ID=?", (0 if current_state else 1, ctx.guild.id))
-                                await db.commit()
-                            finally:
-                                await db.close()
-                            await ctx.respond(f"{ctx.bot.getPlaceholder('success')} Logging has been **{'disabled' if current_state else 'enabled'}**.", ephemeral=True)
+                            new_state = await toggle_column(ctx, "LOGS_ENABLED")
+                            await ctx.respond(f"{ctx.bot.getPlaceholder('success')} Logging has been **{'enabled' if new_state else 'disabled'}**.", ephemeral=True)
 
                         @self.command(name="get", description="Allows you to view the current logging settings.")
                         async def get_logging_settings(ctx: ApplicationContext):
