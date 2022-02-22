@@ -337,7 +337,8 @@ class CurfewBot(commands.Bot):
 
                     # Edit the overwrite for the role in that channel to match the original permission state specified in lockdown_report
                     previous_state = new_overwrites[role].view_channel
-                    new_overwrites[role].view_channel = STATE_MAP_REVERSE[ov[1]]
+                    if previous_state != STATE_MAP_REVERSE[ov[1]]:
+                        new_overwrites[role].view_channel = STATE_MAP_REVERSE[ov[1]]
                     
                     # Take note of the change in the report and include the original state from before reopening
                     #TODO
