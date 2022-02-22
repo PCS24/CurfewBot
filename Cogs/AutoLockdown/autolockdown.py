@@ -50,7 +50,7 @@ class AutoLockdownCog(commands.Cog, name=NAME, description=DESCRIPTION):
                     
                     # Lock down server
                     logger.info(f"Automatically locking down guild {guild_row[0]}.")
-                    await self.bot.server_lockdown(guild, await self.bot.get_target_roles(guild, db=db), await self.bot.get_ignored_roles(guild, db=db), await self.bot.get_ignored_channel_ids(guild, db=db), await self.bot.get_ignore_overwrites_preference(guild, db=db), meta=get_meta(ctx), db=db)
+                    await self.bot.server_lockdown(guild, await self.bot.get_target_roles(guild, db=db), await self.bot.get_ignored_roles(guild, db=db), await self.bot.get_ignored_channel_ids(guild, db=db), await self.bot.get_ignore_overwrites_preference(guild, db=db), meta=report_meta, db=db)
 
                 elif action_info[0] == 'REOPEN':
                     # Check if server is already opened
