@@ -86,6 +86,7 @@ class CurfewBot(commands.Bot):
         super(CurfewBot, self).__init__(*args, **kwargs)
         self.config = config
         self.logger = logging.getLogger('bot')
+        self.remove_command('help')
         genFromTemplate("Static/main.template_db", DATABASE_PATH)
         genFromTemplate("Static/calendar.template_db", CALENDAR_PATH)
         

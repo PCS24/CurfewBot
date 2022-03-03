@@ -57,7 +57,6 @@ for p in CONFIG['Bot']['placeholders']:
 
 # Create bot instance
 bot = utils.CurfewBot(CONFIG, command_prefix=utils.getPrefix, intents=discord.Intents.all(), case_insensitive=True, debug_guilds=(CONFIG['Bot']['debug_guild_ids'] if CONFIG['Bot']['dev_mode'] else None))
-#bot.remove_command('help') # Remove default help command
 
 # Load cogs
 # Add cog paths each time one is created
@@ -79,6 +78,10 @@ async def ping(ctx: ApplicationContext):
     """
     await ctx.respond('Pong! `{0}`s'.format(round(bot.latency, 2)))
 
+
+@bot.slash_command()
+async def help(ctx: ApplicationContext):
+    await ctx.respond(ctx.bot.config['Messages']['help_command_response'])
 
 @bot.event
 async def on_application_command_error(ctx: ApplicationContext, error: commands.CommandError):

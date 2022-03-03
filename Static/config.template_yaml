@@ -1,6 +1,6 @@
 Metadata:
   # DO NOT EDIT
-  VERSION: 1.01
+  VERSION: 1.02
 
 Logging:
   # Should be 'DEBUG', 'INFO', 'WARNING', 'ERROR', or 'CRITICAL'
@@ -55,3 +55,6 @@ Colors:
 Messages:
   # Sent to server owner on guild join. Use {owner_mention} for the owner's mention and {guild_name} for the server name.
   on_guild_join_owner_dm: "Hey {owner_mention}! Thanks for adding me to your server **{guild_name}**."
+
+  # Help command response
+  help_command_response: "Placeholder help text"
