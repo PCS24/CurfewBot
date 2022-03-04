@@ -96,6 +96,7 @@ async def on_application_command_error(ctx: ApplicationContext, error: commands.
 async def on_ready():
     logging.info("CurfewBot online")
     await bot.update_guilds()
+    await bot.sync_commands(bot.commands)
 
 @bot.event
 async def on_guild_join(guild: discord.Guild):
